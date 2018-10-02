@@ -1,0 +1,2 @@
+# HandwrittenCharacterGenerator
+Handwritten character generator implementation
