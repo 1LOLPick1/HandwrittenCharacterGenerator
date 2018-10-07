@@ -4,7 +4,44 @@ import argparse
 from tqdm import tqdm
 from multiprocessing import Pool
 from generate_dataset_csv import generate_paths
-from train_cvae import get_actual_area
+
+
+def get_actual_area(img, threshold=200):
+    x0, x1 = 0, 0
+    y0, y1 = 0, 0
+
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            if img[i, j] < 200:
+                if y0 == 0:
+                    y0 = i
+                y1 = i
+
+    for j in range(img.shape[1]):
+        for i in range(img.shape[0]):
+            if img[i, j] < threshold:
+                if x0 == 0:
+                    x0 = j
+                x1 = j
+
+    width = x1 - x0
+    height = y1 - y0
+
+    d = width - height
+
+    if d < 0:
+        x0 += d // 2
+        x1 -= d // 2
+    else:
+        y0 -= d // 2
+        y1 += d // 2
+
+    width = x1 - x0
+    height = y1 - y0
+
+    x1 -= width - height
+
+    return img[y0:y1 + 1, x0:x1 + 1]
 
 
 def imap_unordered_bar(func, args, n_processes=8):

@@ -1,4 +1,3 @@
-from cvae import create_cvae
 import argparse
 import logging
 import pandas as pd
@@ -8,7 +7,10 @@ from collections import defaultdict
 import cv2
 from keras.callbacks import TensorBoard, ModelCheckpoint
 import os
+import re
+
 from generate_dataset_csv import generate_paths
+from cvae import create_cvae
 
 
 classes = ['J', 'K', 'L', 'M', 'N', 'O', 'Z', 'j', 'k', 'l', 'm', 'n', 'o',
@@ -55,44 +57,6 @@ def resize_image(img, resize_shape=(128, 128), interpolation=cv2.INTER_AREA):
                      interpolation=interpolation)
 
 
-def get_actual_area(img, threshold=200):
-    x0, x1 = 0, 0
-    y0, y1 = 0, 0
-
-    for i in range(img.shape[0]):
-        for j in range(img.shape[1]):
-            if img[i, j] < 200:
-                if y0 == 0:
-                    y0 = i
-                y1 = i
-
-    for j in range(img.shape[1]):
-        for i in range(img.shape[0]):
-            if img[i, j] < threshold:
-                if x0 == 0:
-                    x0 = j
-                x1 = j
-
-    width = x1 - x0
-    height = y1 - y0
-
-    d = width - height
-
-    if d < 0:
-        x0 += d // 2
-        x1 -= d // 2
-    else:
-        y0 -= d // 2
-        y1 += d // 2
-
-    width = x1 - x0
-    height = y1 - y0
-
-    x1 -= width - height
-
-    return img[y0:y1 + 1, x0:x1 + 1]
-
-
 def read_sample(sample, img_shape):
     img_path = sample['image_path']
     label = sample['label']
@@ -112,7 +76,7 @@ def dataset_generator(dataset, batch_size, img_shape, infinite=True):
     random.seed()
 
     while True:
-        shufled_dataset = dataset.copy() #dataset.sample(frac=1.0)
+        shufled_dataset = dataset.copy()
         random.shuffle(shufled_dataset)
         imgs_batch, labels_batch = [], []
         for item in shufled_dataset:
@@ -159,6 +123,32 @@ def open_dataset(dataset_path, batch_size, img_shape, infinite=True):
     )
     steps = len(dataset) // batch_size
     return dataset_gen, steps
+
+
+def load_last_weights(model, path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+    weights_files_list = [
+        matching_f.group()
+        for matching_f in map(
+            lambda x: re.match('cvae-\d+-\d+-\d+-\d+.h5', x),
+            os.listdir(path)
+        ) if matching_f if not None
+    ]
+
+    if len(weights_files_list) == 0:
+        return 0
+
+    weights_files_list.sort(key=lambda x: -int(x.split('-')[1]))
+
+    model.load_weights(os.path.join(path, weights_files_list[0]))
+
+    logging.debug('LOAD MODEL PATH: {}'.format(
+        os.path.join(path, weights_files_list[0])
+    ))
+
+    return int(weights_files_list[0].split('-')[1])
 
 
 def parse_arguments():
@@ -224,6 +214,9 @@ if __name__ == '__main__':
 
     cvae = models["cvae"]
 
+    start_epoch = load_last_weights(cvae, app_args.checkpoints)
+    logging.info('START EPOCH NUMBER: {}'.format(start_epoch))
+
     logging.info(cvae.summary())
 
     callbacks = []
@@ -235,8 +228,15 @@ if __name__ == '__main__':
 
     if app_args.checkpoints:
         callbacks.append(ModelCheckpoint(
-            os.path.join(app_args.checkpoints, 'cvae-{epoch}.h5'.format(
-                epoch='{epoch}')),
+            os.path.join(
+                app_args.checkpoints,
+                'cvae-{epoch}-{latent}-{batch}-{img_width}.h5'.format(
+                    epoch='{epoch}',
+                    latent=app_args.latentdim,
+                    batch=app_args.batch_size,
+                    img_width=app_args.image_width
+                )
+            ),
             save_weights_only=True
         ))
 
@@ -246,7 +246,8 @@ if __name__ == '__main__':
         validation_data=datasets['val'][0],
         validation_steps=datasets['val'][1],
         callbacks=callbacks,
-        epochs=app_args.epochs
+        epochs=app_args.epochs,
+        initial_epoch=start_epoch
     )
 
 

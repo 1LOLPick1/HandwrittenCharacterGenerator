@@ -1,5 +1,5 @@
 from cvae import create_cvae
-from train_cvae import classes, read_sample, one_hot_vector, get_actual_area
+from train_cvae import classes, read_sample, one_hot_vector
 import argparse
 from keras.models import load_model
 import numpy as np
@@ -60,6 +60,13 @@ def generate_image_by_character(models, label, batch_size, latent_parameters):
     )
 
 
+def generane_sentence_image(words_list, image_width, separator_width=5):
+    total_width = (image_width + separator_width) * \
+                  sum(map(lambda x: len(x), words_list)) - separator_width
+
+    result_blank = np.zeros(shape=(image_width, total_width, 1), dtype=np.uint8)
+
+
 if __name__ == '__main__':
     args = argument_parser()
 
@@ -85,7 +92,7 @@ if __name__ == '__main__':
 
     gen_img = generate_image_by_character(
         models,
-        'W',
+        'e',
         args.batch_size,
         latent_parameters
     )
