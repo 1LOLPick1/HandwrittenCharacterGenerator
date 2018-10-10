@@ -49,7 +49,7 @@ def parse_arguments():
     return arg_parser.parse_args()
 
 
-def generate_paths():
+def generate_imgs_tuple():
     supdirs = list(set(['hsf_{}'.format(i) for i in range(8)]) - set(['hsf_5']))
 
     classes_dirs_tuple = {
@@ -63,6 +63,12 @@ def generate_paths():
             [[d + img_name for img_name in os.listdir(d)] for d in drs_list])
         for c, drs_list in classes_dirs_tuple.items()
     }
+
+    return classes_imgs_tuple
+
+
+def generate_paths():
+    classes_imgs_tuple = generate_imgs_tuple()
 
     _label_img_store = [(label, img) for label in classes for img in
                        classes_imgs_tuple[label]]

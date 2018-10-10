@@ -1,5 +1,6 @@
 from cvae import create_cvae, create_simple_cvae
 from train_cvae import classes, read_sample, one_hot_vector
+from generate_dataset_csv import generate_imgs_tuple
 import argparse
 from keras.models import load_model
 import numpy as np
@@ -44,6 +45,47 @@ def generate_sentence_image(
     image_width = generate_image_by_character(
         models, classes[0], batch_size, latent_parameters
     ).shape[0]
+
+    imgs_tuple = generate_imgs_tuple()
+
+    total_width = image_width * sum(map(lambda x: len(x), words_list)) + \
+                  separator_width * (len(words_list) - 1)
+
+    result_blank = np.zeros(shape=(image_width, total_width, 1), dtype=np.uint8)
+    result_blank += 255
+
+    character_lists = [
+        [
+            generate_image_by_character(
+                models, c, batch_size, get_latent_parameters(
+                    models,
+                    imgs_tuple[c][0],
+                    c,
+                    (image_width, image_width),
+                    batch_size
+                )
+            ) for c in word
+        ] for word in words_list
+    ]
+
+    shift_x = 0
+    for word_characters in character_lists:
+        for character in word_characters:
+            result_blank[:, shift_x:shift_x + character.shape[1]] = character
+            shift_x += character.shape[1]
+        shift_x += separator_width
+
+    return cv2.GaussianBlur(result_blank, (5, 5), 0)
+
+
+def generate_sentence_image_by_latent(
+        words_list, models,
+        batch_size, latent_parameters, separator_width=5):
+    image_width = generate_image_by_character(
+        models, classes[0], batch_size, latent_parameters
+    ).shape[0]
+
+    imgs_tuple = generate_imgs_tuple()
 
     total_width = image_width * sum(map(lambda x: len(x), words_list)) + \
                   separator_width * (len(words_list) - 1)
@@ -116,14 +158,7 @@ if __name__ == '__main__':
 
     print(latent_parameters)
 
-    #gen_img = generate_image_by_character(
-    #    models,
-    #    'e',
-    #    args.batch_size,
-    #    latent_parameters
-    #)
-
-    gen_img = generate_sentence_image(
+    gen_img = generate_sentence_image_by_latent(
         args.text,
         models,
         args.batch_size,

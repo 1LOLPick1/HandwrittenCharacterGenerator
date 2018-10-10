@@ -83,7 +83,10 @@ def dataset_generator(dataset, batch_size, img_shape, infinite=True):
             logging.debug('item:{}'.format(item))
 
             try:
-                img, label = read_sample({'label':item[0], 'image_path': item[1]}, img_shape)
+                img, label = read_sample({
+                    'label': item[0],
+                    'image_path': item[1]
+                }, img_shape)
                 pass
             except IOError:
                 continue
