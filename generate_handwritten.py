@@ -1,4 +1,4 @@
-from cvae import create_cvae, create_simple_cvae
+from cvae import create_conv_cvae, create_simple_cvae
 from train_cvae import classes, read_sample, one_hot_vector
 from generate_dataset_csv import generate_imgs_tuple
 import argparse

@@ -10,7 +10,7 @@ import os
 import re
 
 from generate_dataset_csv import generate_paths
-from cvae import create_cvae
+from cvae import create_conv_cvae
 
 
 classes = ['J', 'K', 'L', 'M', 'N', 'O', 'Z', 'j', 'k', 'l', 'm', 'n', 'o',
@@ -207,7 +207,7 @@ if __name__ == '__main__':
 
     datasets = defaultdict(lambda: (None, None), datasets)
 
-    models, loss = create_cvae(
+    models, loss = create_conv_cvae(
         input_shape=(app_args.image_width, app_args.image_width),
         num_classes=len(classes),
         latent_dim=app_args.latentdim,

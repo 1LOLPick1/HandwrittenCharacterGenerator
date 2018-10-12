@@ -16,7 +16,7 @@ from keras import losses
 from keras.models import load_model
 
 
-def create_cvae(input_shape, num_classes, latent_dim, dropout_rate, batch_size,
+def create_conv_cvae(input_shape, num_classes, latent_dim, dropout_rate, batch_size,
                 start_lr=0.001):
     models = {}
 
