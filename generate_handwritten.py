@@ -85,8 +85,6 @@ def generate_sentence_image_by_latent(
         models, classes[0], batch_size, latent_parameters
     ).shape[0]
 
-    imgs_tuple = generate_imgs_tuple()
-
     total_width = image_width * sum(map(lambda x: len(x), words_list)) + \
                   separator_width * (len(words_list) - 1)
 
@@ -108,7 +106,7 @@ def generate_sentence_image_by_latent(
             shift_x += character.shape[1]
         shift_x += separator_width
 
-    return cv2.GaussianBlur(result_blank, (5, 5), 0)
+    return result_blank #cv2.GaussianBlur(result_blank, (5, 5), 0)
 
 
 def argument_parser():
@@ -136,7 +134,7 @@ def argument_parser():
 if __name__ == '__main__':
     args = argument_parser()
 
-    models, loss = create_cvae(
+    models, loss = create_simple_cvae(
         batch_size=args.batch_size,
         latent_dim=args.latentdim,
         input_shape=(args.image_width, args.image_width),

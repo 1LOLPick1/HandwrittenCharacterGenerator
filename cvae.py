@@ -20,11 +20,9 @@ def create_cvae(input_shape, num_classes, latent_dim, dropout_rate, batch_size,
                 start_lr=0.001):
     models = {}
 
-    # Добавим Dropout и BatchNormalization
     def apply_bn_and_dropout(x):
         return Dropout(dropout_rate)(BatchNormalization()(x))
 
-    # Энкодер
     input_img = Input(shape=(input_shape[0], input_shape[1], 1))
     flatten_img = Flatten()(input_img)
     input_lbl = Input(shape=(num_classes,), dtype='float32')
@@ -41,13 +39,9 @@ def create_cvae(input_shape, num_classes, latent_dim, dropout_rate, batch_size,
     x = apply_bn_and_dropout(x)
     x = Flatten()(x)
 
-    # Предсказываем параметры распределений
-    # Вместо того чтобы предсказывать стандартное отклонение,
-    # предсказываем логарифм вариации
     z_mean = Dense(latent_dim)(x)
     z_log_var = Dense(latent_dim)(x)
 
-    # Сэмплирование из Q с трюком репараметризации
     def sampling(args):
         z_mean, z_log_var = args
         epsilon = K.random_normal(shape=(batch_size, latent_dim), mean=0.,
@@ -61,7 +55,6 @@ def create_cvae(input_shape, num_classes, latent_dim, dropout_rate, batch_size,
     models["z_lvarer"] = Model([input_img, input_lbl], z_log_var,
                                'Enc_z_log_var')
 
-    # Декодер
     z = Input(shape=(latent_dim,))
     input_lbl_d = Input(shape=(num_classes,), dtype='float32')
 
@@ -115,11 +108,9 @@ def create_simple_cvae(input_shape, num_classes, latent_dim, dropout_rate, batch
                 start_lr=0.001):
     models = {}
 
-    # Добавим Dropout и BatchNormalization
     def apply_bn_and_dropout(x):
         return Dropout(dropout_rate)(BatchNormalization()(x))
 
-    # Энкодер
     input_img = Input(shape=(input_shape[0], input_shape[1], 1))
     flatten_img = Flatten()(input_img)
     input_lbl = Input(shape=(num_classes,), dtype='float32')
@@ -128,13 +119,9 @@ def create_simple_cvae(input_shape, num_classes, latent_dim, dropout_rate, batch
     x = Dense(256, activation='relu')(x)
     x = apply_bn_and_dropout(x)
 
-    # Предсказываем параметры распределений
-    # Вместо того чтобы предсказывать стандартное отклонение,
-    # предсказываем логарифм вариации
     z_mean = Dense(latent_dim)(x)
     z_log_var = Dense(latent_dim)(x)
 
-    # Сэмплирование из Q с трюком репараметризации
     def sampling(args):
         z_mean, z_log_var = args
         epsilon = K.random_normal(shape=(batch_size, latent_dim), mean=0.,
@@ -148,7 +135,6 @@ def create_simple_cvae(input_shape, num_classes, latent_dim, dropout_rate, batch
     models["z_lvarer"] = Model([input_img, input_lbl], z_log_var,
                                'Enc_z_log_var')
 
-    # Декодер
     z = Input(shape=(latent_dim,))
     input_lbl_d = Input(shape=(num_classes,), dtype='float32')
 
