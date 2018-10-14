@@ -75,7 +75,7 @@ def generate_sentence_image(
             shift_x += character.shape[1]
         shift_x += separator_width
 
-    return cv2.GaussianBlur(result_blank, (5, 5), 0)
+    return result_blank #cv2.GaussianBlur(result_blank, (5, 5), 0)
 
 
 def generate_sentence_image_by_latent(

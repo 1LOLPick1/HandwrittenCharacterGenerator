@@ -14,6 +14,8 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras import backend as K
 from keras import losses
 from keras.models import load_model
+from keras.regularizers import L1L2
+
 
 
 def create_conv_cvae(input_shape, num_classes, latent_dim, dropout_rate, batch_size,
@@ -39,8 +41,14 @@ def create_conv_cvae(input_shape, num_classes, latent_dim, dropout_rate, batch_s
     x = apply_bn_and_dropout(x)
     x = Flatten()(x)
 
-    z_mean = Dense(latent_dim)(x)
-    z_log_var = Dense(latent_dim)(x)
+    z_mean = Dense(
+        latent_dim,
+        kernel_regularizer=L1L2(1E-2),
+        activity_regularizer=L1L2(1E-2))(x)
+    z_log_var = Dense(
+        latent_dim,
+        kernel_regularizer=L1L2(1E-2),
+        activity_regularizer=L1L2(1E-2))(x)
 
     def sampling(args):
         z_mean, z_log_var = args
